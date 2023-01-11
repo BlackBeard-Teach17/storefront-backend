@@ -2,16 +2,16 @@
     "dev": {
         "driver": "pg",
         "host": "localhost",
-        "database": { "env": "DB_NAME_DEV"},
-        "user": { "env": "DB_USER_DEV"},
-        "password": { "env": "DB_PASSWORD_DEV"}
+        "database": {"ENV": "POSTGRES_DB"},
+        "user": {"ENV": "POSTGRES_USER"},
+        "password": {"ENV": "POSTGRES_PASSWORD"}
     },
 
     "test": {
         "driver": "pg",
         "host": "localhost",
-        "database": { "env": "DB_NAME_TEST"},
-        "user": { "env": "DB_USER_TEST"},
-        "password": { "env": "DB_PASSWORD_TEST"}
+        "database": {"ENV": "POSTGRES_DB"},
+        "user": {"ENV": "POSTGRES_USER"},
+        "password": {"ENV": "POSTGRES_PASSWORD"}
     }
 }
