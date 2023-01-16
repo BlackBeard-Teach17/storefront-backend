@@ -31,7 +31,7 @@ if (ENV == 'Test'){
         user: POSTGRES_USER,
         password: POSTGRES_PASSWORD,
         database: POSTGRES_DB
-    })
+    });
 }
 
 export default client;
