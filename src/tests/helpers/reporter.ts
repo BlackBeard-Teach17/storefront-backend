@@ -2,14 +2,14 @@ import {DisplayProcessor, SpecReporter, StacktraceOption} from 'jasmine-spec-rep
 
 class customProcessor extends DisplayProcessor {
   public displayJasmineStarted(info: jasmine.JasmineStartedInfo, log: string): string {
-    return `TypeScript ${log}`;
+    return `${log}`;
   }
 }
 
 jasmine.getEnv().clearReporters();
 jasmine.getEnv().addReporter(new SpecReporter({
     spec: {
-        displayStacktrace: StacktraceOption.PRETTY,
+        displayStacktrace: StacktraceOption.NONE,
         displayDuration: true
     },
     customProcessors: [customProcessor]
