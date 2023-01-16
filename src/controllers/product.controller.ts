@@ -40,7 +40,7 @@ const show = async (_req: Request, res: Response) => {
         res.json(showProduct);
     } catch(err)
     {
-        throw new Error(`Could not find product ${_req.params.id}. Error: ${err}`);
+        res.status(400).send(`Could not find product ${_req.params.id}. Error: ${err}`);
     }
 }
 const updateAll = async (_req: Request, res: Response) => {
@@ -77,7 +77,7 @@ const updatePrice = async (_req: Request, res: Response) => {
         res.json(updatedProduct);
     } catch(err)
     {
-        throw new Error(`Could not update product ${_req.params.id}. Error: ${err}`);
+        res.status(400).send(`Could not update product ${_req.params.id}. Error: ${err}`);
     }
 }
 
@@ -87,7 +87,7 @@ const updateProductCategory = async (_req: Request, res: Response) => {
         res.json(updatedProduct);
     } catch(err)
     {
-        throw new Error(`Could not update product ${_req.params.id}. Error: ${err}`);
+        res.status(400).send(`Could not update product ${_req.params.id}. Error: ${err}`);
     }
 }
 
