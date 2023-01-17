@@ -16,6 +16,8 @@ describe('User Controller', () => {
         const response = await supertest(app)
             .post('/users/create')
             .send({
+                firstname: 'Test_FirstName',
+                lastname: 'Test_LastName',
                 username: 'Test',
                 password: 'password'
             });
@@ -30,10 +32,11 @@ describe('User Controller', () => {
     });
 
     it('[GET] show route should return the correct user', async () => {
-        const response = await supertest(app).get('/users/1');
+        const response = await supertest(app).get('/users/2');
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
-            id: 1,
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
             username: 'Test'
         });
     });
@@ -84,7 +87,10 @@ describe('User Model', () => {
     });
     it ('should have a create method that adds a user', async () => {
         const result = await store.create({
-            username: 'Test', password: 'password'
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test',
+            password: 'password'
         });
         expect(result).toBeDefined();
     });

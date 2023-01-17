@@ -41,16 +41,16 @@ describe('Product Controller', () => {
     it('[GET] index route should return a list of products', async () => {
         const response = await supertest(app).get('/products');
         expect(response.status).toBe(200);
-        expect(response.body).toEqual([{id: 1,
+        expect(response.body).toEqual([{id: 2,
             name: 'Test Product',
             price: 100,
             category: 'Test'}]);
     });
     it('[GET] show route should return the correct product', async () => {
-        const response = await supertest(app).get('/products/1');
+        const response = await supertest(app).get('/products/2');
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
-            id: 1,
+            id: 2,
             name: 'Test Product',
             price: 100,
             category: 'Test'
@@ -58,7 +58,7 @@ describe('Product Controller', () => {
     });
     it('[PUT] update route should update a product', async () => {
         const response = await supertest(app)
-            .put('/products/update/1')
+            .put('/products/update/2')
             .send({
                 name: 'Product Test',
                 price: 150,
@@ -67,10 +67,10 @@ describe('Product Controller', () => {
         expect(response.status).toBe(200);
     });
     it('[GET] show route should return the updated product', async () => {
-        const response = await supertest(app).get('/products/1');
+        const response = await supertest(app).get('/products/2');
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
-            id: 1,
+            id: 2,
             name: 'Product Test',
             price: 150,
             category: 'Tester'
@@ -78,7 +78,7 @@ describe('Product Controller', () => {
     });
     it('[PUT] updateName route should update a product name', async () => {
         const response = await supertest(app)
-            .put('/products/update/1/name')
+            .put('/products/update/2/name')
             .send({
                 name: 'Test Product'
             });
@@ -86,7 +86,7 @@ describe('Product Controller', () => {
     });
     it('[PUT] updatePrice route should update a product price', async () => {
         const response = await supertest(app)
-            .put('/products/update/1/price')
+            .put('/products/update/2/price')
             .send({
                 price: 200
             });
@@ -94,14 +94,14 @@ describe('Product Controller', () => {
     });
     it('[PUT] updateCategory route should update a product category', async () => {
         const response = await supertest(app)
-            .put('/products/update/1/category')
+            .put('/products/update/2/category')
             .send({
                 category: 'NewTestCategory'
             });
         expect(response.status).toBe(200);
     });
     it('[DELETE] route should delete a product', async () => {
-        const response = await supertest(app).delete('/products/1');
+        const response = await supertest(app).delete('/products/2');
         expect(response.status).toBe(200);
     });
 });
