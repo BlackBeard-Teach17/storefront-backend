@@ -3,6 +3,8 @@ import client from "../configs/database.config";
 
 export type User = {
     id?: number;
+    firstname?: string;
+    lastname?: string;
     username: string;
     password: string;
 }
@@ -42,11 +44,10 @@ export class UserStore {
                 const duplicate_user = `Username ${u.username} already exists`;
                 return duplicate_user;
             }
-
             const conn = await client.connect();
-            const sql = 'INSERT INTO users (username, password_digest) VALUES($1, $2)';
+            const sql = 'INSERT INTO users (firstname, lastname, username, password_digest) VALUES($1, $2,$3,$4) RETURNING *';
             const hash = bcrypt.hashSync(u.password, Number(process.env.SALT_ROUNDS));
-            const result = await conn.query(sql, [u.username, hash]);
+            const result = await conn.query(sql, [u.firstname, u.lastname, u.username, hash]);
             conn.release();
             return result.rows[0];
         }catch (err)
@@ -58,7 +59,7 @@ export class UserStore {
     async show(id: string): Promise<User> {
         try {
             const conn = await client.connect();
-            const sql = 'SELECT id, username FROM users WHERE id=($1)';
+            const sql = 'SELECT firstname, lastname, username FROM users WHERE id=($1)';
             const result = await conn.query(sql, [id]);
             conn.release();
             return result.rows[0];

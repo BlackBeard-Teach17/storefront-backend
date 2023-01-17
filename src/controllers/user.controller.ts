@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import jwt from 'jsonwebtoken';
-import { UserStore } from "../models/user.model";
+import { User, UserStore } from "../models/user.model";
 import { verifyAuthToken } from "../middleware/auth.middleware";
 
 const store = new UserStore();
@@ -15,7 +15,9 @@ const index = async (_req: Request, res: Response) => {
 }
 
 const create = async (_req: Request, res: Response) => {
-    const user = {
+    const user: User = {
+        firstname: _req.body.firstname,
+        lastname: _req.body.lastname,
         username: _req.body.username,
         password: _req.body.password
     }
