@@ -21,7 +21,7 @@ const create = async (_req: Request, res: Response) => {
         const newOrder = await store.create(order);
         res.json(newOrder);
     }catch(err){
-        res.status(400).send(err);
+        res.status(400).send('Could not create order. Error: ${err}');
     }
 }
 
@@ -45,12 +45,12 @@ const destroy = async (_req: Request, res: Response) => {
 
 const addProduct = async (_req: Request, res: Response) => {
     const order = {
-        order_id: _req.body.order_id,
+        order_id: _req.params.id,
         product_id: _req.body.product_id,
         quantity: _req.body.quantity
     }
     try{
-        const newOrder = await store.addProduct(order.order_id, order.product_id, order.quantity);
+        const newOrder = await store.addToCart(order.order_id, order.product_id, order.quantity);
         res.json(newOrder);
     }catch(err){
         res.status(400).send(err);
@@ -59,10 +59,10 @@ const addProduct = async (_req: Request, res: Response) => {
 
 const removeProduct = async (_req: Request, res: Response) => {
     const order = {
-        order_id: _req.body.order_id,
+        order_id: _req.params.id,
         product_id: _req.body.product_id,
-        quantity: _req.body.quantity
     }
+    
     try{
         const newOrder = await store.removeProduct(order.order_id, order.product_id);
         res.json(newOrder);
@@ -73,7 +73,7 @@ const removeProduct = async (_req: Request, res: Response) => {
 
 const updateStatus = async (_req: Request, res: Response) => {
     const order: Order = {
-        id : parseInt(_req.body.order_id),
+        id : parseInt(_req.params.id),
         user_id: _req.body.user_id,
         status: _req.body.status
     }
@@ -94,15 +94,25 @@ const deleteOrder = async (_req: Request, res: Response) => {
     }
 }
 
+const getOrderItems = async (_req: Request, res: Response) => {
+    try{
+        const getOrderItem = await store.getCartItems(parseInt(_req.params.id));
+        res.json(getOrderItem);
+    } catch(err){
+        res.status(400).send(`Could not find order ${_req.params.id}. Error: ${err}`);
+    }
+}
+
 const order_routes = (app: express.Application) => {
     app.get('/orders/', index);
     app.post('/orders/create', create);
     app.get('/orders/:id', show);
     app.delete('/orders/:id', destroy);
-    app.post('/orders/addProduct', addProduct);
-    app.delete('/orders/removeProduct', removeProduct);
-    app.put('/orders/updateStatus', updateStatus);
-    app.delete('/orders/deleteOrder', deleteOrder);
+    app.post('/orders/:id/addProduct', addProduct);
+    app.delete('/orders/:id/removeProduct', removeProduct);
+    app.put('/orders/:id/updateStatus', updateStatus);
+    app.delete('/orders/:id', deleteOrder);
+    app.get('/orders/:id/getOrderItems', getOrderItems);
 }
 
 export default order_routes;
