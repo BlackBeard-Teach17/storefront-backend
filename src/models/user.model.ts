@@ -6,7 +6,7 @@ export type User = {
     firstname?: string;
     lastname?: string;
     username: string;
-    isAdmin?: string;
+    isAdmin?: boolean;
     password?: string;
 }
 
@@ -46,7 +46,7 @@ export class UserStore {
                 return duplicate_user;
             }
             const conn = await client.connect();
-            const sql = 'INSERT INTO users (firstname, lastname, username, isAdmin, password_digest) VALUES($1,$2,$3,$4,$5) RETURNING *';
+            const sql = 'INSERT INTO users (firstname, lastname, username, is_admin, password_digest) VALUES($1,$2,$3,$4,$5) RETURNING *';
             const hash = bcrypt.hashSync(u.password, Number(process.env.SALT_ROUNDS));
             const result = await conn.query(sql, [u.firstname, u.lastname, u.username, u.isAdmin,hash]);
             conn.release();
@@ -74,7 +74,7 @@ export class UserStore {
         }
     }
 
-    async authenticate(username: string, password: string): Promise<User | string> {
+    async authenticate(username: string, password: string): Promise<User> {
         try {
             const conn = await client.connect();
             const sql = 'SELECT * FROM users WHERE username=($1)';
@@ -87,7 +87,8 @@ export class UserStore {
                         id: result.rows[0].id,
                         firstname: result.rows[0].firstname,
                         lastname: result.rows[0].lastname,
-                        username: result.rows[0].username
+                        username: result.rows[0].username,
+                        isAdmin: result.rows[0].is_admin
                     };
                     return user;
                 }
