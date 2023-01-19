@@ -125,19 +125,16 @@ export class ProductStore {
         }
     }
 
-    async topProducts(): Promise<Product[]> {
-        try {
+    async showProductCategory(category: string): Promise<Product[]> {
+        try{
             const conn = await client.connect();
-            const sql = 'SELECT op.id, SUM(quantity)' + 
-                        'FROM orders' + 
-                        'JOIN order_products op ON orders.id = order_products.order_id' + 
-                        'GROUP BY op.id' +
-                        'ORDER BY quantity DESC LIMIT 5';
-            const result = await conn.query(sql);
+            const sql = 'SELECT * FROM products WHERE category=($1)';
+            const result = await conn.query(sql, [category]);
             conn.release();
             return result.rows;
         } catch (err) {
-            throw new Error(`Could not get top products. Error: ${err}`);
+            throw new Error(`Could not find product ${category}. Error: ${err}`);
         }
     }
+
 }
