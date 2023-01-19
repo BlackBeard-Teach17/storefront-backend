@@ -4,13 +4,9 @@ import app from '../../server';
 import { UserStore } from '../../models/user.model';
 
 const store = new UserStore();
+let token;
 
 describe('User Controller', () => {
-    it('[GET] before index route should return an empty list', async () => {
-        const response = await supertest(app).get('/users');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual([]);
-    });
 
     it('[POST] create route should add a user', async () => {
         const response = await supertest(app)
@@ -19,28 +15,11 @@ describe('User Controller', () => {
                 firstname: 'Test_FirstName',
                 lastname: 'Test_LastName',
                 username: 'Test',
+                isAdmin: 'n',
                 password: 'password'
             });
         expect(response.status).toBe(200);
     });
-
-    it('[GET] index route should return a list of users', async () => {
-        const response = await supertest(app).get('/users');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual([{
-            username: 'Test'}]);
-    });
-
-    it('[GET] show route should return the correct user', async () => {
-        const response = await supertest(app).get('/users/2');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual({
-            firstname: 'Test_FirstName',
-            lastname: 'Test_LastName',
-            username: 'Test'
-        });
-    });
-
     it('[POST] authenticate route should authenticate a user', async () => {
         const response = await supertest(app)
             .post('/users/authenticate')
@@ -49,8 +28,26 @@ describe('User Controller', () => {
                 password: 'password'
             });
         expect(response.status).toBe(200);
+        token = response.body.token;
     });
 
+    it('[GET] index route should return a list of users', async () => {
+        const response = await supertest(app).get('/users').set('Authorization', `Bearer ${token}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual([{
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test'}]);
+    });
+
+    it('[GET] show route should return the correct user', async () => {
+        const response = await supertest(app).get('/users/2').set('Authorization', `Bearer ${token}`);
+        expect(response.body).toEqual({
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test'
+        })
+    });
     it('[POST] authenticate route should return JWT token', async () => {
         const response = await supertest(app)
             .post('/users/authenticate')
@@ -59,7 +56,7 @@ describe('User Controller', () => {
                 password: 'password'
             });
         expect(response.status).toBe(200);
-        expect(response.body).toBeDefined();
+        expect(response.body.token).toEqual(token);
     });
 
     it('[POST] authenticate route should return 401 for invalid credentials', async () => {
@@ -69,6 +66,30 @@ describe('User Controller', () => {
                 username: 'Test',
                 password: 'wrongpassword'
             });
+        expect(response.status).toBe(401);
+    });
+
+    it('[PUT] update route should update the user password', async () => {
+        const response = await supertest(app)
+            .put('/users/2/password').set('Authorization', `Bearer ${token}`)
+            .send({
+                password: 'password2'
+            });
+        expect(response.status).toBe(200);
+    });
+
+    it('[PUT] update route should update a username', async () => {
+        const response = await supertest(app)
+            .put('/users/2/username').set('Authorization', `Bearer ${token}`)
+            .send({
+                username: 'Test2'
+        });
+        expect(response.status).toBe(200);
+    });
+    
+    it('[DELETE] delete route should return 401', async () => {
+        const response = await supertest(app)
+            .delete('/users/2').set('Authorization', `Bearer ${token}`);
         expect(response.status).toBe(401);
     });
 });
@@ -90,6 +111,7 @@ describe('User Model', () => {
             firstname: 'Test_FirstName',
             lastname: 'Test_LastName',
             username: 'Test',
+            isAdmin: 'n',
             password: 'password'
         });
         expect(result).toBeDefined();
@@ -100,7 +122,8 @@ describe('User Model', () => {
     });
 
     it('should have a authenticate method', () => {
-        expect(store.authenticate).toBeDefined();
+        const result = store.authenticate('Test', 'password');
+        expect(result).toBeDefined();
     });
 
     it('should authenticate user successfully', async () => {
