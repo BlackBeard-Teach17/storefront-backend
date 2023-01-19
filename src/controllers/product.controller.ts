@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { Product, ProductStore } from "../models/product.model";
+import { verifyAuthToken } from "../middleware/auth.middleware";
 
 const store = new ProductStore();
 
@@ -26,6 +27,16 @@ const create = async (_req: Request, res: Response) => {
     }
 
     try{
+        if (!product.name || !product.price || !product.category) {
+            res.status(400);
+            res.json('Product name, price and category are required');
+        }
+        if (isNaN(product.price) || product.price < 0) {
+            res.status(400);
+            res.json('Product price must be a positive number');
+        }
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to create product');
         const newProduct = await store.create(product);
         res.json(newProduct);
     } catch(err) {
@@ -50,8 +61,9 @@ const updateAll = async (_req: Request, res: Response) => {
         price: _req.body.price,
         category: _req.body.category
     }
-
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to update product');
         const updatedProduct = await store.updateAll(product);
         res.json(updatedProduct);
     } catch(err) {
@@ -61,8 +73,9 @@ const updateAll = async (_req: Request, res: Response) => {
 }
 
 const updateName = async (_req: Request, res: Response) => {
-
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to update product name');
         const updatedProduct = await store.updateProductName(_req.params.id, _req.body.name);
         res.json(updatedProduct);
     } catch(err) {
@@ -73,6 +86,8 @@ const updateName = async (_req: Request, res: Response) => {
 
 const updatePrice = async (_req: Request, res: Response) => {
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to update product price');
         const updatedProduct = await store.updateProductPrice(_req.params.id, _req.body.price);
         res.json(updatedProduct);
     } catch(err)
@@ -83,6 +98,8 @@ const updatePrice = async (_req: Request, res: Response) => {
 
 const updateProductCategory = async (_req: Request, res: Response) => {
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to update product category');
         const updatedProduct = await store.updateProductCategory(_req.params.id, _req.body.category);
         res.json(updatedProduct);
     } catch(err)
@@ -93,6 +110,8 @@ const updateProductCategory = async (_req: Request, res: Response) => {
 
 const destroy = async (_req: Request, res: Response) => {
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to delete product');
         const deletedProduct = await store.delete(_req.params.id);
         res.json(deletedProduct);
     } catch(err) {
@@ -103,13 +122,13 @@ const destroy = async (_req: Request, res: Response) => {
 
 const product_routes = (app: express.Application) => {
     app.get('/products/', index);
-    app.post('/products/create', create);
+    app.post('/products/create', verifyAuthToken, create);
     app.get('/products/:id', show);
-    app.put('/products/update/:id', updateAll);
-    app.put('/products/update/:id/name', updateName);
-    app.put('/products/update/:id/price', updatePrice);
-    app.put('/products/update/:id/category', updateProductCategory);
-    app.delete('/products/:id', destroy);
+    app.put('/products/update/:id', verifyAuthToken, updateAll);
+    app.put('/products/update/:id/name', verifyAuthToken, updateName);
+    app.put('/products/update/:id/price', verifyAuthToken, updatePrice);
+    app.put('/products/update/:id/category', verifyAuthToken, updateProductCategory);
+    app.delete('/products/:id', verifyAuthToken, destroy);
 }
 
 export default product_routes;
