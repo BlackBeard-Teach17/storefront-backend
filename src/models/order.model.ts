@@ -60,18 +60,16 @@ export class OrderStore {
     }
 
     // This function is used to check if the product is already in the order and update the quantity if it is.
-    async checkOrderProductExists(order_id: string, product_id: number, quantity: number): Promise<Boolean> {
+    async checkOrderProductExists(order_id: string, product_id: number): Promise<Boolean> {
         try {
             const conn = await client.connect();
-            const sql = 'SELECT product_id, quantity FROM order_products WHERE order_id=($1) AND product_id=($2)';
+            const sql = 'SELECT product_id FROM order_products WHERE order_id=($1) AND product_id=($2)';
             const result = await conn.query(sql, [order_id, product_id]);
             conn.release();
             if (result.rows[0] === undefined){
                 return false;
             }
             if(result.rows[0].product_id === product_id){
-                const new_quantity = result.rows[0].quantity + quantity;
-                await this.updateOrderProduct(parseInt(order_id), product_id, new_quantity);
                 return true;
             }
             return false;
@@ -98,8 +96,11 @@ export class OrderStore {
             return 'Order does not exist';
         if (await this.checkOrderStatus(order_id.toString()) === false)
             return 'Order is completed';
-        if (await this.checkOrderProductExists(order_id, product_id, quantity) === true)
-            return 'Order updated';
+        if (await this.checkOrderProductExists(order_id, product_id) === true)// If product is already in order, update quantity
+        {
+            await this.updateOrderProduct(parseInt(order_id), product_id, quantity);
+            return 'Product quantity updated';
+        }
         return await this.addProduct(order_id, product_id, quantity);
     }
 
@@ -150,7 +151,8 @@ export class OrderStore {
     }
     // This function is used to remove a product from an order.
     async removeProduct(order_id: string, product_id: number): Promise<Order | string> {
-        console.log('removeProduct: ' + order_id + ' ' + product_id)
+        if (await this.checkIfOrderExists(order_id) === false)
+            return 'Order does not exist';
         if (await this.checkOrderStatus(order_id) === false)
             return 'Order is completed';
         try {
@@ -174,6 +176,19 @@ export class OrderStore {
         } catch (err)
         {
             throw new Error(`Could not update order ${o.id}. Error: ${err}`);
+        }
+    }
+
+    async getCompletedOrders(): Promise<Order[]> {
+        try{
+            const conn = await client.connect();
+            const sql = 'SELECT * FROM orders WHERE status=($1)';
+            const result = await conn.query(sql, ['completed']);
+            conn.release();
+            return result.rows;
+        } catch (err)
+        {
+            throw new Error(`Could not get completed orders. Error: ${err}`);
         }
     }
 
