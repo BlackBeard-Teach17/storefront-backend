@@ -6,6 +6,7 @@ import { verifyAuthToken } from "../middleware/auth.middleware";
 const store = new UserStore();
 
 const index = async (_req: Request, res: Response) => {
+    await verifyAuthToken(_req, res, () => {});
     try{
         const users = await store.index();
         res.json(users);
@@ -19,11 +20,15 @@ const create = async (_req: Request, res: Response) => {
         firstname: _req.body.firstname,
         lastname: _req.body.lastname,
         username: _req.body.username,
+        isAdmin: _req.body.isAdmin,
         password: _req.body.password
     }
     try{
         const newUser = await store.create(user);
-        res.json(newUser);
+        const options = {expiresIn: '2h'};
+        const secret = process.env.JWT_SECRET as string;
+        const token = jwt.sign({username: _req.body.username}, secret, options);
+        res.json({newUser, token: token});
     }catch(err){
         res.status(400).send(err);
     }
@@ -31,19 +36,22 @@ const create = async (_req: Request, res: Response) => {
 
 const authenticate = async (_req: Request, res: Response) => {
     try{
-        const user = await store.authenticate(_req.body.username, _req.body.password);
+        const user: User | string = await store.authenticate(_req.body.username, _req.body.password);
         const options = {expiresIn: '2h'};
-        const token = jwt.sign({user}, process.env.JWT_SECRET as string, options);
-        res.set('Authorization', 'Bearer ${token}');
-        res.json(token);
+        const secret = process.env.JWT_SECRET as string;
+        const token = jwt.sign({username: _req.body.username}, secret, options);
+        res.json({user: _req.body.username, token: token});
     }catch(err){
         res.status(401).send("Incorrect username or password");
     }
 }
 
 const show = async (_req: Request, res: Response) => {
-    try{
+    await verifyAuthToken(_req, res, ()=>{});
+    try{ 
         const showUser = await store.show(_req.params.id);
+        if (showUser.username !== (_req as any).user.username) 
+            res.status(401).send("Unauthorized");
         res.json(showUser);
     }catch(err){
         res.status(400).send(`Could not find user ${_req.params.id}. Error: ${err}`);
@@ -51,6 +59,15 @@ const show = async (_req: Request, res: Response) => {
 }
 
 const destroy = async (_req: Request, res: Response) => {
+    await verifyAuthToken(_req, res, ()=>{});
+    try {
+        const user = await store.show(_req.params.id);
+        if (user.username !== (_req as any).user.username) 
+            res.status(401).send("Unauthorized to delete this user");
+    } catch (err) {
+        res.status(400).send(`Could not find user ${_req.params.id}. Error: ${err}`);
+    }
+
     try{
         const deletedUser = await store.delete(_req.params.id);
         res.json(deletedUser);
@@ -60,8 +77,15 @@ const destroy = async (_req: Request, res: Response) => {
 }
 
 const updateUsername = async (_req: Request, res: Response) => {
+    await verifyAuthToken(_req, res, ()=>{});
+    try {
+        const user = await store.show(_req.params.id);
+        if (user.username !== (_req as any).user.username) 
+            res.status(401).send("Unauthorized to update this username");
+    } catch (err) {
+        res.status(400).send(`Could not find user ${_req.params.id}. Error: ${err}`);
+    }
     try{
-        verifyAuthToken(_req, res, ()=>{});
         const updatedUser = await store.updateUsername(_req.params.id, _req.body.username);
         res.json(updatedUser);
     }catch(err){
@@ -70,22 +94,32 @@ const updateUsername = async (_req: Request, res: Response) => {
 }
 
 const updatePassword = async (_req: Request, res: Response) => {
+    await verifyAuthToken(_req, res, ()=>{});
+    try {
+        const user = await store.show(_req.params.id);
+        if (user.username !== (_req as any).user.username) 
+            res.status(401).send("Unauthorized to update this user password");
+    } catch (err) {
+        res.status(400).send(`Could not find user ${_req.params.id}. Error: ${err}`);
+    }
     try{
         const updatedUser = await store.updateUserPassword(_req.params.id, _req.body.password);
         res.json(updatedUser);
-    }catch(err){
+    } catch(err){
         res.status(400).send(`Could not find user ${_req.params.id}. Error: ${err}`);
     }
 }
 
+
+
 const user_routes = (app: express.Application) => {
-    app.get('/users/', index);
+    app.get('/users/', verifyAuthToken, index);
     app.post('/users/create', create);
     app.post('/users/authenticate', authenticate);
-    app.get('/users/:id', show);
-    app.delete('/users/:id', destroy);
-    app.put('/users/:id/username', updateUsername);
-    app.put('/users/:id/password', updatePassword);
+    app.get('/users/:id', verifyAuthToken, show);
+    app.delete('/users/:id', verifyAuthToken, destroy);
+    app.put('/users/:id/username', verifyAuthToken, updateUsername);
+    app.put('/users/:id/password', verifyAuthToken, updatePassword);
 }
 
 export default user_routes;
