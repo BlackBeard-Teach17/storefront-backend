@@ -5,8 +5,9 @@ import { Order, OrderStore } from "../models/order.model";
 const store = new OrderStore();
 
 const index = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, () => {});
     try{
+        if ((_req as any).user.is_admin === false)
+            res.status(401).send('Unauthorized to view orders');
         const orders = await store.index();
         res.json(orders);
     }catch(err){
@@ -15,7 +16,6 @@ const index = async (_req: Request, res: Response) => {
 }
 
 const create = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     const order = {
         user_id: _req.body.user_id,
         status: _req.body.status
@@ -29,27 +29,15 @@ const create = async (_req: Request, res: Response) => {
 }
 
 const show = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     try{
-        const showOrder = await store.show(_req.params.id);
+        const showOrder = await store.showOrder(_req.params.id);
         res.json(showOrder);
     }catch(err){
         res.status(400).send(`Could not find order ${_req.params.id}. Error: ${err}`);
     }
 }
 
-const destroy = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
-    try{
-        const deletedOrder = await store.delete(_req.params.id);
-        res.json(deletedOrder);
-    }catch(err){
-        res.status(400).send(`Could not find order ${_req.params.id}. Error: ${err}`);
-    }
-}
-
 const addProduct = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     const order = {
         order_id: _req.params.id,
         product_id: _req.body.product_id,
@@ -64,7 +52,6 @@ const addProduct = async (_req: Request, res: Response) => {
 }
 
 const removeProduct = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     const order = {
         order_id: _req.params.id,
         product_id: _req.body.product_id,
@@ -79,7 +66,6 @@ const removeProduct = async (_req: Request, res: Response) => {
 }
 
 const updateStatus = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     const order: Order = {
         id : parseInt(_req.params.id),
         user_id: _req.body.user_id,
@@ -94,7 +80,6 @@ const updateStatus = async (_req: Request, res: Response) => {
 }
 
 const deleteOrder = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     try{
         const deletedOrder = await store.delete(_req.params.id);
         res.json(deletedOrder);
@@ -104,7 +89,6 @@ const deleteOrder = async (_req: Request, res: Response) => {
 }
 
 const getOrderItems = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     try{
         const getOrderItem = await store.getCartItems(parseInt(_req.params.id));
         res.json(getOrderItem);
@@ -114,26 +98,25 @@ const getOrderItems = async (_req: Request, res: Response) => {
 }
 
 const getCompletedOrders = async (_req: Request, res: Response) => {
-    await verifyAuthToken(_req, res, ()=>{});
     try{
-        const getCompletedOrders = await store.getCompletedOrders();
-        res.json(getCompletedOrders);
+        const completedOrders = await store.getCompletedOrders(_req.params.id);
+        res.json(completedOrders);
     } catch(err){
         res.status(400).send(`Could not find completed orders. Error: ${err}`);
     }
 }
 
 const order_routes = (app: express.Application) => {
+    app.get('/orders/:id/getCompletedOrders', verifyAuthToken, getCompletedOrders);
     app.get('/orders/', verifyAuthToken, index);
     app.post('/orders/create', verifyAuthToken, create);
     app.get('/orders/:id', verifyAuthToken, show);
-    app.delete('/orders/:id', verifyAuthToken, destroy);
     app.post('/orders/:id/addProduct', verifyAuthToken, addProduct);
     app.delete('/orders/:id/removeProduct', verifyAuthToken, removeProduct);
     app.put('/orders/:id/updateStatus',verifyAuthToken, updateStatus);
     app.delete('/orders/:id', verifyAuthToken, deleteOrder);
     app.get('/orders/:id/getOrderItems', verifyAuthToken, getOrderItems);
-    app.get('/orders/getCompletedOrders', verifyAuthToken, getCompletedOrders);
+    
 }
 
 export default order_routes;
