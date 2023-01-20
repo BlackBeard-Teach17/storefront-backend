@@ -125,7 +125,7 @@ export class ProductStore {
         }
     }
 
-    async showProductCategory(category: string): Promise<Product[]> {
+    async getByCategory(category: string): Promise<Product[]> {
         try{
             const conn = await client.connect();
             const sql = 'SELECT * FROM products WHERE category=($1)';

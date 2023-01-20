@@ -54,6 +54,16 @@ const show = async (_req: Request, res: Response) => {
         res.status(400).send(`Could not find product ${_req.params.id}. Error: ${err}`);
     }
 }
+
+const getByCategory = async (_req: Request, res: Response) => {
+    try{
+        const showProduct = await store.getByCategory(_req.params.category);
+        res.json(showProduct);
+    } catch(err)
+    {
+        res.status(400).send(`Could not find product ${_req.params.id}. Error: ${err}`);
+    }
+}
 const updateAll = async (_req: Request, res: Response) => {
     const product: Product = {
         id: parseInt(_req.params.id),
@@ -124,6 +134,7 @@ const product_routes = (app: express.Application) => {
     app.get('/products/', index);
     app.post('/products/create', verifyAuthToken, create);
     app.get('/products/:id', show);
+    app.get('/products/:category', getByCategory);
     app.put('/products/update/:id', verifyAuthToken, updateAll);
     app.put('/products/update/:id/name', verifyAuthToken, updateName);
     app.put('/products/update/:id/price', verifyAuthToken, updatePrice);
