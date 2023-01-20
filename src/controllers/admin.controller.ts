@@ -26,8 +26,8 @@ const usersWithOrders = async (req: Request, res: Response) => {
 };
 
 const admin_routes = (app: express.Application) => { 
-    app.get('/admin/top5', verifyAuthToken, top5Products);
-    app.get('/admin/users', verifyAuthToken, usersWithOrders);
+    app.get('/admin/top5products', verifyAuthToken, top5Products);
+    app.get('/admin/userswithorders', verifyAuthToken, usersWithOrders);
 }
 
 export default admin_routes;
