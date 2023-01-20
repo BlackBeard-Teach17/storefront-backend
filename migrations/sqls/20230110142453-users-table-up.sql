@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS users (
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
     username VARCHAR(100) NOT NULL,
-    isAdmin VARCHAR(2) NOT NULL DEFAULT 'N',
-    password_digest VARCHAR(255) NOT NULL
+    is_admin BOOLEAN NOT NULL DEFAULT false,
+    password VARCHAR(255) NOT NULL
 );
