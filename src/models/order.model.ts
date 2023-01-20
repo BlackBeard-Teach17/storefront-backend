@@ -7,24 +7,30 @@ export type Order = {
 };
 
 export class OrderStore {
-    async index(): Promise<Order[]> {
+    async index(): Promise<Order[] | string> {
         try {
             const conn = await client.connect();
             const sql = 'SELECT * FROM orders';
             const result = await conn.query(sql);
             conn.release();
+            if (result.rows[0] === undefined){
+                return 'No orders found';
+            }
             return result.rows;
         } catch (err) {
             throw new Error(`Could not get orders. Error: ${err}`);
         }
     }
 
-    async show(id: string): Promise<Order> {
+    async showOrder(id: string): Promise<Order | string> {
         try {
             const conn = await client.connect();
             const sql = 'SELECT * FROM orders WHERE id=($1)';
             const result = await conn.query(sql, [id]);
             conn.release();
+            if (result.rows[0] === undefined){
+                return 'No order with that id found';
+            }
             return result.rows[0];
         } catch (err) {
             throw new Error(`Could not find order ${id}. Error: ${err}`);
@@ -179,11 +185,11 @@ export class OrderStore {
         }
     }
 
-    async getCompletedOrders(): Promise<Order[]> {
+    async getCompletedOrders(user_id: string): Promise<Order[]> {
         try{
             const conn = await client.connect();
-            const sql = 'SELECT * FROM orders WHERE status=($1)';
-            const result = await conn.query(sql, ['completed']);
+            const sql = 'SELECT * FROM orders WHERE status=\'completed\' and user_id=($1)';
+            const result = await conn.query(sql, [user_id]);
             conn.release();
             return result.rows;
         } catch (err)

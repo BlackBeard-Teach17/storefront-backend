@@ -6,7 +6,7 @@ export type User = {
     firstname?: string;
     lastname?: string;
     username: string;
-    isAdmin?: boolean;
+    is_admin?: boolean;
     password?: string;
 }
 
@@ -46,9 +46,9 @@ export class UserStore {
                 return duplicate_user;
             }
             const conn = await client.connect();
-            const sql = 'INSERT INTO users (firstname, lastname, username, is_admin, password_digest) VALUES($1,$2,$3,$4,$5) RETURNING *';
+            const sql = 'INSERT INTO users (firstname, lastname, username, is_admin, password) VALUES($1,$2,$3,$4,$5) RETURNING *';
             const hash = bcrypt.hashSync(u.password, Number(process.env.SALT_ROUNDS));
-            const result = await conn.query(sql, [u.firstname, u.lastname, u.username, u.isAdmin,hash]);
+            const result = await conn.query(sql, [u.firstname, u.lastname, u.username, u.is_admin, hash]);
             conn.release();
             return result.rows[0];
         }catch (err)
@@ -82,13 +82,13 @@ export class UserStore {
             conn.release();
 
             if (result.rows.length) {
-                if (bcrypt.compareSync(password, result.rows[0].password_digest)) {
+                if (bcrypt.compareSync(password, result.rows[0].password)) {
                     const user: User = {
                         id: result.rows[0].id,
                         firstname: result.rows[0].firstname,
                         lastname: result.rows[0].lastname,
                         username: result.rows[0].username,
-                        isAdmin: result.rows[0].is_admin
+                        is_admin: result.rows[0].is_admin
                     };
                     return user;
                 }
@@ -100,13 +100,12 @@ export class UserStore {
         }
     }
     
-    async delete(id: string): Promise<User> {
+    async delete(id: string): Promise<void> {
         try {
             const conn = await client.connect();
             const sql = 'DELETE FROM users WHERE id=($1)';
-            const result = await conn.query(sql, [id]);
+            await conn.query(sql, [id]);
             conn.release();
-            return result.rows[0];
         } catch (err) {
             throw new Error(`Could not delete user ${id}. Error: ${err}`);
         }
@@ -119,7 +118,7 @@ export class UserStore {
     async updateUserPassword(id: string, password: string): Promise<User> {
         try {
             const conn = await client.connect();
-            const sql = 'UPDATE users SET password_digest=($1) WHERE id=($2)';
+            const sql = 'UPDATE users SET password=($1) WHERE id=($2)';
             const hash = await bcrypt.hashSync(password, Number(process.env.SALT_ROUNDS));
             const result = await conn.query(sql, [hash, id]);
             conn.release();
