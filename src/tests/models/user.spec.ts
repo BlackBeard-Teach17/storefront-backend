@@ -15,7 +15,7 @@ describe('User Controller', () => {
                 firstname: 'Test_FirstName',
                 lastname: 'Test_LastName',
                 username: 'Test',
-                isAdmin: 'n',
+                is_admin: true,
                 password: 'password'
             });
         expect(response.status).toBe(200);
@@ -41,12 +41,12 @@ describe('User Controller', () => {
     });
 
     it('[GET] show route should return the correct user', async () => {
-        const response = await supertest(app).get('/users/2').set('Authorization', `Bearer ${token}`);
+        const response = await supertest(app).get('/users/1').set('Authorization', `Bearer ${token}`);
         expect(response.body).toEqual({
             firstname: 'Test_FirstName',
             lastname: 'Test_LastName',
             username: 'Test'
-        })
+        });
     });
     it('[POST] authenticate route should return JWT token', async () => {
         const response = await supertest(app)
@@ -71,7 +71,7 @@ describe('User Controller', () => {
 
     it('[PUT] update route should update the user password', async () => {
         const response = await supertest(app)
-            .put('/users/2/password').set('Authorization', `Bearer ${token}`)
+            .put('/users/1/password').set('Authorization', `Bearer ${token}`)
             .send({
                 password: 'password2'
             });
@@ -80,7 +80,7 @@ describe('User Controller', () => {
 
     it('[PUT] update route should update a username', async () => {
         const response = await supertest(app)
-            .put('/users/2/username').set('Authorization', `Bearer ${token}`)
+            .put('/users/1/username').set('Authorization', `Bearer ${token}`)
             .send({
                 username: 'Test2'
         });
@@ -89,7 +89,7 @@ describe('User Controller', () => {
     
     it('[DELETE] delete route should return 401', async () => {
         const response = await supertest(app)
-            .delete('/users/2').set('Authorization', `Bearer ${token}`);
+            .delete('/users/1').set('Authorization', `Bearer ${token}`);
         expect(response.status).toBe(401);
     });
 });
@@ -111,12 +111,27 @@ describe('User Model', () => {
             firstname: 'Test_FirstName',
             lastname: 'Test_LastName',
             username: 'Test',
-            isAdmin: 'n',
+            is_admin: true,
             password: 'password'
         });
-        expect(result).toBeDefined();
+        
+        expect(result).toEqual({
+            id: 2,
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test',
+            is_admin: true,
+            password: result['password']
+        });
     });
-
+    it ('should return a list of users', async () => {
+        const result = await store.index();
+        expect(result).toEqual([{
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test',
+        }]);
+    });
     it('should have a delete method', () => {
         expect(store.delete).toBeDefined();
     });
@@ -128,17 +143,24 @@ describe('User Model', () => {
 
     it('should authenticate user successfully', async () => {
         const result = await store.authenticate('Test', 'password');
-        expect(result).toBeDefined();
+        expect(result).toEqual({
+            id: 2,
+            firstname: 'Test_FirstName',
+            lastname: 'Test_LastName',
+            username: 'Test',
+            is_admin: true,
+        });
     });
 
     it ('should return an error for invalid credentials', async () => {
         try {
             const result = await store.authenticate('Test', 'wrongpassword');
             fail('Should have thrown an error');
-        }catch (err) {
+        } catch (err: any) {
+            const error = 'Error: Could not authenticate user Test. Error: Incorrect username or password';
             expect(err).toBeDefined();
-            //expect((err as string)).toEqual('Error: Could not authenticate user Test. Error: Incorrect username or password');
-        }
+            expect(err.toString()).toEqual(error);
+        }        
     });
 
     it ('should return true for duplicate username', async () => {
@@ -150,4 +172,9 @@ describe('User Model', () => {
         const unique = await store.isDuplicate('Unique');
         expect(unique).toBe(false);
     })
+
+    it('should delete the user with id 1', async () => {
+        const result = await store.delete('1');
+        expect(result).toBe(void 0);
+    });
 });
