@@ -22,14 +22,14 @@ const create = async (_req: Request, res: Response) => {
         firstname: _req.body.firstname,
         lastname: _req.body.lastname,
         username: _req.body.username,
-        isAdmin: _req.body.isAdmin,
+        is_admin: _req.body.is_admin,
         password: _req.body.password
     }
     try{
         const newUser = await store.create(user);
         const options = {expiresIn: '2h'};
         const secret = process.env.JWT_SECRET as string;
-        const token = jwt.sign({username: _req.body.username, is_admin: _req.body.isAdmin}, secret, options);
+        const token = jwt.sign({username: _req.body.username, is_admin: _req.body.is_admin}, secret, options);
         res.json({newUser, token: token});
     }catch(err){
         res.status(400).send(err);
@@ -41,8 +41,8 @@ const authenticate = async (_req: Request, res: Response) => {
         const user = await store.authenticate(_req.body.username, _req.body.password);
         const options = {expiresIn: '2h'};
         const secret = process.env.JWT_SECRET as string;
-        const token = jwt.sign({username: _req.body.username, is_admin: user.isAdmin}, secret, options);
-        res.json({user: _req.body.username, is_admin: user.isAdmin , token: token});
+        const token = jwt.sign({username: _req.body.username, is_admin: user.is_admin}, secret, options);
+        res.json({user: _req.body.username, is_admin: user.is_admin , token: token});
     }catch(err){
         res.status(401).send("Incorrect username or password");
     }
