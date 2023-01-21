@@ -31,7 +31,9 @@ This will spin up a Postgres container for you.
  - `JWT_SECRET=secret123`
 
  ## Running the Project
-    - To run the project, run the following command in the root of the project:
+  - To run the project, run the following command in the root of the project:
+    - `docker-compose up -d` this will start the Postgres container
+    - `npx db-migrate up` this will run the migrations and seed the database
     - `npm start` this will start the server on port 3001
     - `npm run watch` this will start the server on port 3001 and watch for changes to the codebase
     - `npm test` this will run the tests in the project. 
