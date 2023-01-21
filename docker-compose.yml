@@ -1,15 +1,17 @@
-version: '3.9'
-
+version: '3'
 services:
   postgres:
     image: postgres
     ports:
-      - '5432:5432'
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_DB
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: e-commerce-postgres
     env_file:
       - .env
-    volumes:
-      - 'postgres:/var/lib/postgresql/data'
-    container_name: ecommerce_postgres
-
 volumes:
-  postgres:
+  postgres_data:
